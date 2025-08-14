@@ -1,0 +1,55 @@
+name: Build & Deploy to ECS via ECR
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REPO_NAME: Uloha8-nginx-app
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: "eu-central-1"
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform Apply (ECR only)
+        run: terraform apply -input=false -auto-approve -target=aws_ecr_repository.app
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker image
+        run: |
+          IMAGE_URI="${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ github.sha }}"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+          docker build -t "$IMAGE_URI" .
+
+      - name: Push Docker image
+        run: docker push "$IMAGE_URI"
+
+      - name: Terraform Apply (Full infra with new image tag)
+        run: terraform apply -input=false -auto-approve \
+              -var="ecr_repo_name=${{ env.ECR_REPO_NAME }}" \
+              -var="image_tag=${{ github.sha }}"
