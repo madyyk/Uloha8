@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: eu-central-1
-  ECR_REPO_NAME: uloha8-nginx-app
+  ECR_REPO_NAME: uloha8-nginx-app   # už je lowercase, super
 
 jobs:
   deploy:
@@ -23,7 +23,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: "eu-central-1"
+          aws-region: eu-central-1
           aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -33,8 +33,9 @@ jobs:
       - name: Terraform init
         run: terraform init -input=false
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve -target=aws_ecr_repository.app
+      - name: Terraform Apply - ECR
+        run: terraform apply -auto-approve -target=aws_ecr_repository.app \
+              -var="ecr_repo_name=${{ env.ECR_REPO_NAME_LOWER }}"
 
       - name: Login to Amazon ECR
         id: ecr
@@ -42,7 +43,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE_URI="${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO_NAME }}:${{ github.sha }}"
+          IMAGE_URI="${{ steps.ecr.outputs.registry }}/${{ env.ECR_REPO_NAME_LOWER }}:${{ github.sha }}"
           echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
           docker build -t "$IMAGE_URI" .
 
@@ -50,8 +51,6 @@ jobs:
         run: docker push "$IMAGE_URI"
 
       - name: Terraform Apply
-        run: |
-            terraform apply -auto-approve \
-            -var="ecr_repo_name=${{ env.ECR_REPO_NAME_LOWER }}" \
-            -var="image_tag=${{ github.sha }}"
-
+        run: terraform apply -input=false -auto-approve \
+              -var="ecr_repo_name=${{ env.ECR_REPO_NAME_LOWER }}" \
+              -var="image_tag=${{ github.sha }}"
