@@ -50,7 +50,6 @@ jobs:
       - name: Push Docker image
         run: docker push "$IMAGE_URI"
 
-      - name: Terraform Apply (Full infra with new image tag)
-        run: terraform apply -input=false -auto-approve \
-              -var="ecr_repo_name=${{ env.ECR_REPO_NAME }}" \
-              -var="image_tag=${{ github.sha }}"
+      - name: Terraform Apply (ECR only)
+        run: terraform apply -auto-approve -target=aws_ecr_repository.app -var="ecr_repo_name=uloha8-nginx-app"
+
