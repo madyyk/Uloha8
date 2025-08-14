@@ -9,7 +9,7 @@ terraform {
   }
 
    backend "s3" {
-     bucket = "S3Bucket-Uloha8-2025"
+     bucket = "s3bucket-uloha8-2025"
      key    = "Uloha8/terraform.tfstate"
     region = "eu-central-1"
    }
