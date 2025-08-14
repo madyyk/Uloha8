@@ -49,7 +49,7 @@ jobs:
       - name: Push Docker image
         run: docker push "$IMAGE_URI"
 
-        - name: Terraform Apply
+      - name: Terraform Apply
         run: |
             terraform apply -auto-approve \
             -var="ecr_repo_name=${{ env.ECR_REPO_NAME_LOWER }}" \
