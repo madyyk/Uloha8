@@ -33,7 +33,7 @@ jobs:
       - name: Terraform init
         run: terraform init -input=false
 
-      - name: Terraform Apply (ECR only)
+      - name: Terraform Apply - ECR
         run: terraform apply -auto-approve -target=aws_ecr_repository.app -var="ecr_repo_name=${{ env.ECR_REPO_NAME }}"
 
       - name: Login to Amazon ECR
@@ -49,5 +49,5 @@ jobs:
       - name: Push Docker image
         run: docker push "$IMAGE_URI"
 
-      - name: Terraform Apply (Full infra with new image tag)
+      - name: Terraform Apply
         run: terraform apply -input=false -auto-approve -var="ecr_repo_name=${{ env.ECR_REPO_NAME }}" -var="image_tag=${{ github.sha }}"
