@@ -1,5 +1,5 @@
 resource "aws_ecs_task_definition" "app" {
-  family                   = "Uloha8-nginx-app"
+  family                   = "uloha8-nginx-app"
   cpu                      = "256"
   memory                   = "512"
   network_mode             = "awsvpc"
@@ -10,7 +10,7 @@ resource "aws_ecs_task_definition" "app" {
 
   container_definitions = jsonencode([
     {
-      name      = "Uloha8-app"
+      name      = "uloha8-app"
       image     = "${aws_ecr_repository.app.repository_url}:${var.image_tag}"
       essential = true
 
