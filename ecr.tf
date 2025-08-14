@@ -1,7 +1,7 @@
 variable "ecr_repo_name" {
   description = "Názov ECR repository"
   type        = string
-  default     = "Uloha8-nginx-app"
+  default     = "uloha8-nginx-app"
 }
 
 resource "aws_ecr_repository" "app" {
@@ -13,6 +13,6 @@ resource "aws_ecr_repository" "app" {
   }
 
   tags = {
-    Project = "Uloha8"
+    Project = "uloha8"
   }
 }

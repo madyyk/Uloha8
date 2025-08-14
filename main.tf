@@ -10,7 +10,7 @@ terraform {
 
    backend "s3" {
      bucket = "s3bucket-uloha8-2025"
-     key    = "Uloha8/terraform.tfstate"
+     key    = "uloha8/terraform.tfstate"
     region = "eu-central-1"
    }
 }
@@ -29,12 +29,12 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = { Name = "Uloha8-vpc" }
+  tags = { Name = "uloha8-vpc" }
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
-  tags   = { Name = "Uloha8-igw" }
+  tags   = { Name = "uloha8-igw" }
 }
 
 resource "aws_subnet" "public_a" {
@@ -42,7 +42,7 @@ resource "aws_subnet" "public_a" {
   cidr_block              = var.public_subnet_cidrs[0]
   availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
-  tags = { Name = "Uloha8-public-a" }
+  tags = { Name = "uloha8-public-a" }
 }
 
 resource "aws_subnet" "public_b" {
@@ -50,7 +50,7 @@ resource "aws_subnet" "public_b" {
   cidr_block              = var.public_subnet_cidrs[1]
   availability_zone       = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = true
-  tags = { Name = "Uloha8-public-b" }
+  tags = { Name = "uloha8-public-b" }
 }
 
 resource "aws_route_table" "public" {
@@ -59,7 +59,7 @@ resource "aws_route_table" "public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
-  tags = { Name = "Uloha8-public-rt" }
+  tags = { Name = "uloha8-public-rt" }
 }
 
 resource "aws_route_table_association" "public_a" {
@@ -74,7 +74,7 @@ resource "aws_route_table_association" "public_b" {
 
 # Security Groups
 resource "aws_security_group" "alb" {
-  name        = "Uloha8-alb-sg"
+  name        = "uloha8-alb-sg"
   description = "Allow HTTP from anywhere"
   vpc_id      = aws_vpc.main.id
 
@@ -95,11 +95,11 @@ resource "aws_security_group" "alb" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = { Name = "Uloha8-alb-sg" }
+  tags = { Name = "uloha8-alb-sg" }
 }
 
 resource "aws_security_group" "ecs" {
-  name        = "Uloha8-ecs-sg"
+  name        = "uloha8-ecs-sg"
   description = "Allow HTTP from ALB to ECS"
   vpc_id      = aws_vpc.main.id
 
@@ -119,22 +119,22 @@ resource "aws_security_group" "ecs" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = { Name = "Uloha8-ecs-sg" }
+  tags = { Name = "uloha8-ecs-sg" }
 }
 
 # ALB + Target Group + Listener
 resource "aws_lb" "app" {
-  name               = "Uloha8-alb"
+  name               = "uloha8-alb"
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
   idle_timeout       = 60
 
-  tags = { Name = "Uloha8-alb" }
+  tags = { Name = "uloha8-alb" }
 }
 
 resource "aws_lb_target_group" "app" {
-  name        = "Uloha8-tg"
+  name        = "uloha8-tg"
   port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
@@ -150,7 +150,7 @@ resource "aws_lb_target_group" "app" {
     matcher             = "200"
   }
 
-  tags = { Name = "Uloha8-tg" }
+  tags = { Name = "uloha8-tg" }
 }
 
 resource "aws_lb_listener" "http" {
@@ -166,23 +166,23 @@ resource "aws_lb_listener" "http" {
 
 # ECS
 resource "aws_ecs_cluster" "this" {
-  name = "Uloha8-cluster"
+  name = "uloha8-cluster"
   setting {
     name  = "containerInsights"
     value = "disabled"
   }
-  tags = { Name = "Uloha8-cluster" }
+  tags = { Name = "uloha8-cluster" }
 }
 
 resource "aws_cloudwatch_log_group" "this" {
-  name              = "/ecs/Uloha8-nginx-app"
+  name              = "/ecs/uloha8-nginx-app"
   retention_in_days = 7
 }
 
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "Uloha8-service"
+  name            = "uloha8-service"
   cluster         = aws_ecs_cluster.this.id
   launch_type     = "FARGATE"
   desired_count   = 1
@@ -197,7 +197,7 @@ resource "aws_ecs_service" "app" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.app.arn
-    container_name   = "Uloha8-app"
+    container_name   = "uloha8-app"
     container_port   = 80
   }
 
