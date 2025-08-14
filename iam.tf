@@ -1,4 +1,4 @@
-# Execution role pre ECS task (pull z ECR, CloudWatch Logs atď.)
+# Execution role pre ECS task
 resource "aws_iam_role" "ecs_task_execution" {
   name = "Uloha8-ecs-task-execution-role"
 
